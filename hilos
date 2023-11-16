@@ -1,0 +1,111 @@
+1 classe
+
+// A la classe CFil
+public class CFil extends Thread {
+    private String nomProcés;
+    private int temporització;
+
+    public CFil(String nomProcés) {
+        this.nomProcés = nomProcés;
+        this.temporització = 0; // Valor per defecte
+    }
+
+    public String getNomProcés() {
+        return nomProcés;
+    }
+
+    public void setTemporització(int temporització) {
+        this.temporització = temporització;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Procés " + nomProcés + " en execució.");
+
+        try {
+            Thread.sleep(temporització);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+2 classe
+
+// A la classe CFilPrincipal
+import java.util.Scanner;
+
+public class CFilPrincipal {
+    public static void main(String[] args) {
+        // Punt 1.1: Temporització del fill perquè acabi abans que el pare
+        CFil procésFill1 = new CFil("Fill1");
+        procésFill1.setTemporització(500); // Temporització perquè acabi abans que el pare
+        procésFill1.start();
+
+        try {
+            procésFill1.join(); // Esperar que el procés fill acabi abans de continuar amb el pare
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Resta del codi del procés pare
+        System.out.println("Procés principal en execució.");
+
+        // Punt 1.2: Temporització del fill perquè acabi després que el pare
+        CFil procésFill2 = new CFil("Fill2");
+        procésFill2.setTemporització(1500); // Temporització perquè acabi després que el pare
+        procésFill2.start();
+
+        // Procés principal
+        for (int i = 0; i < 5; i++) {
+            System.out.println("Procés principal en execució.");
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Resta del codi del procés pare
+
+        // Punt 1.3: Assegurar que el procés pare sempre acabi després dels seus processos fills
+        try {
+            procésFill2.join(); // Esperar que el segon procés fill acabi abans de continuar amb el pare
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Punt 1.4: Iniciar l'execució de tants processos fills com indiqui l'usuari
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Introdueix el nombre de processos fills: ");
+        int numProcFills = scanner.nextInt();
+
+        // Verificar que el nombre de processos fills no sigui excessivament gran
+        if (numProcFills <= 0 || numProcFills > 10) {
+            System.out.println("Nombre de processos fills no vàlid. Ha d'estar entre 1 i 10.");
+            return;
+        }
+
+        // Crear i executar processos fills amb temporitzacions diferents
+        CFil[] processosFills = new CFil[numProcFills];
+        for (int i = 0; i < numProcFills; i++) {
+            processosFills[i] = new CFil("Fill" + (i + 1));
+            processosFills[i].setTemporització(100 * (i + 1)); // Temporització creixent
+            processosFills[i].start();
+        }
+
+        // Esperar que tots els processos fills acabin abans de continuar amb el procés pare
+        for (int i = 0; i < numProcFills; i++) {
+            try {
+                processosFills[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Resta del codi del procés pare
+        System.out.println("Procés principal en execució.");
+
+        scanner.close();
+    }
+}
